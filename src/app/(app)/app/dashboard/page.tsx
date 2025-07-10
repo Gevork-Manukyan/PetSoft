@@ -11,7 +11,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between text-white py-8">
                 <Branding />
 
-                <Stats guests={2} />
+                <Stats />
             </div>
 
             <div className="grid md:grid-cols-3 md:grid-rows-[45px_1fr] grid-rows-[45px_300px_500px] gap-4 md:h-[600px]">
