@@ -1,6 +1,8 @@
-export default function ContentBlock({ children }: { children: React.ReactNode }) {
+import { cn } from "@/lib/utils";
+
+export default function ContentBlock({ children, className }: { children: React.ReactNode, className?: string }) {
     return (
-        <section className="bg-[#f7f8fa] shadow-sm rounded-md overflow-hidden h-full w-full">
+        <section className={cn("bg-[#f7f8fa] shadow-sm rounded-md overflow-hidden h-full w-full", className)}>
             {children}
         </section>
     )
