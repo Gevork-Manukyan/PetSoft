@@ -1,8 +1,9 @@
 "use client";
 
-import { usePetContext } from "@/lib/hooks";
+import { usePetContext, useSearchContext } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useMemo } from "react";
 
 export default function PetList() {
   const {
@@ -11,9 +12,13 @@ export default function PetList() {
     handleSelectPetId,
   } = usePetContext();
 
+  const { search } = useSearchContext();
+
+  const filteredPets = useMemo(() => pets.filter((pet) => pet.name.toLowerCase().includes(search.toLowerCase())), [pets, search]);
+
   return (
     <ul className="bg-white border-b border-light">
-      {pets.map((pet) => (
+      {filteredPets.map((pet) => (
         <li key={pet.id}>
           <button
             onClick={() => handleSelectPetId(pet.id)}
