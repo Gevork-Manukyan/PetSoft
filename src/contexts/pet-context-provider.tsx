@@ -9,6 +9,7 @@ export type PetContextType = {
     handleSelectPetId: (petId: string) => void;
     selectedPet: Pet | null;
     guests: number;
+    handleCheckoutPet: (petId: string) => void;
 }
 
 export const PetContext = createContext<PetContextType | null>(null);
@@ -22,9 +23,14 @@ export default function PetContextProvider({ children, pets }: { children: React
     const handleSelectPetId = (petId: string) => {
         setSelectedPetId(petId);
     }
+
+    const handleCheckoutPet = (petId: string) => {
+        setPetsState(prev => prev.filter((pet) => pet.id !== petId));
+        setSelectedPetId(null);
+    }
     
     return (
-        <PetContext.Provider value={{ pets: petsState, selectedPetId, handleSelectPetId, selectedPet, guests }}>
+        <PetContext.Provider value={{ pets: petsState, selectedPetId, handleSelectPetId, selectedPet, guests, handleCheckoutPet }}>
             {children}
         </PetContext.Provider>
     )
