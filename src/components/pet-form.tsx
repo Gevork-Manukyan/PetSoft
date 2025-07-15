@@ -1,16 +1,11 @@
 import { usePetContext } from "@/lib/hooks";
-import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
-
-enum PetFormFields {
-  NAME = "name",
-  OWNER = "ownerName",
-  URL = "imageUrl",
-  AGE = "age",
-  NOTES = "notes",
-}
+import { PetFormFields } from "@/lib/types";
+import { addPet, editPet } from "@/actions/actions";
+import PetFormBtn from "./pet-form-btn";
+import { toast } from "sonner";
 
 type PetFormProps = {
   actionType: "add" | "edit";
@@ -18,30 +13,24 @@ type PetFormProps = {
 };
 
 export default function PetForm({ actionType, onFormSubmit }: PetFormProps) {
-  const { handleAddPet, selectedPet, handleEditPet } = usePetContext();
+  const { selectedPet } = usePetContext();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
-    const pet = {
-      name: formData.get(PetFormFields.NAME) as string,
-      ownerName: formData.get(PetFormFields.OWNER) as string,
-      imageURL:
-        (formData.get(PetFormFields.URL) as string) ||
-        "https://bytegrad.com/course-assets/react-nextjs/pet-placeholder.png",
-      age: Number(formData.get(PetFormFields.AGE) as string),
-      notes: formData.get(PetFormFields.NOTES) as string,
-    };
-
-    if (actionType === "add") handleAddPet(pet)
-    else handleEditPet({ ...pet, id: selectedPet!.id });
+  const handleAction = async (formData: FormData) => {
+    let error;
     
+    if (actionType === "add") {
+      error = await addPet(formData);
+    } else if (actionType === "edit") {
+      error = await editPet(selectedPet!.id, formData);
+    }
+
+    if (error) toast.warning(error.message);
+
     onFormSubmit();
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col">
+    <form action={handleAction} className="flex flex-col">
       <div className="space-y-3">
         <FormDiv>
           <Label htmlFor={PetFormFields.NAME}>Name</Label>
@@ -89,14 +78,12 @@ export default function PetForm({ actionType, onFormSubmit }: PetFormProps) {
             name={PetFormFields.NOTES}
             rows={3}
             required
-            defaultValue={actionType === "edit" ? selectedPet?.notes : ""}
+            defaultValue={actionType === "edit" ? selectedPet?.notes || "" : ""}
           />
         </FormDiv>
       </div>
 
-      <Button className="mt-5 self-end" type="submit">
-        {actionType === "add" ? "Add a new pet" : "Edit pet"}
-      </Button>
+      <PetFormBtn actionType={actionType} />
     </form>
   );
 }
