@@ -1,11 +1,6 @@
-export type Pet = {
-  id: string;
-  name: string;
-  ownerName: string;
-  imageURL: string;
-  age: number;
-  notes: string | null;
-};
+import { Pet as PrismaPet } from "@prisma/client";
+
+export type PetEssentials = Omit<PrismaPet, "id" | "createdAt" | "updatedAt">;
 
 export enum PetFormFields {
   NAME = "name",

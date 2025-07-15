@@ -2,10 +2,8 @@ import { usePetContext } from "@/lib/hooks";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
-import { PetFormFields } from "@/lib/types";
-import { addPet, editPet } from "@/actions/actions";
+import { PetEssentials, PetFormFields } from "@/lib/types";
 import PetFormBtn from "./pet-form-btn";
-import { toast } from "sonner";
 
 type PetFormProps = {
   actionType: "add" | "edit";
@@ -13,21 +11,27 @@ type PetFormProps = {
 };
 
 export default function PetForm({ actionType, onFormSubmit }: PetFormProps) {
-  const { selectedPet } = usePetContext();
+  const { selectedPet, handleAddPet, handleEditPet } = usePetContext();
 
   const handleAction = async (formData: FormData) => {
-    let error;
-    
-    if (actionType === "add") {
-      error = await addPet(formData);
-    } else if (actionType === "edit") {
-      error = await editPet(selectedPet!.id, formData);
-    }
-
-    if (error) toast.warning(error.message);
-
     onFormSubmit();
-  }
+
+    const petData: PetEssentials = {
+      name: formData.get(PetFormFields.NAME) as string,
+      ownerName: formData.get(PetFormFields.OWNER) as string,
+      imageURL:
+        (formData.get(PetFormFields.URL) as string) ||
+        "https://bytegrad.com/course-assets/react-nextjs/pet-placeholder.png",
+      age: Number(formData.get(PetFormFields.AGE)),
+      notes: formData.get(PetFormFields.NOTES) as string,
+    };
+
+    if (actionType === "add") {
+      await handleAddPet(petData);
+    } else if (actionType === "edit") {
+      await handleEditPet(selectedPet!.id, petData);
+    }
+  };
 
   return (
     <form action={handleAction} className="flex flex-col">

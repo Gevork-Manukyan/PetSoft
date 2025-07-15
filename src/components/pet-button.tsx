@@ -5,6 +5,7 @@ import { PlusIcon } from "lucide-react";
 import { Dialog, DialogTitle, DialogHeader, DialogContent, DialogTrigger } from "./ui/dialog";
 import PetForm from "./pet-form";
 import { useState } from "react";
+import { flushSync } from "react-dom";
 
 type PetButtonProps = {
     actionType: "add" | "edit" | "checkout";
@@ -43,7 +44,11 @@ export default function PetButton({ children, actionType, onClick, disabled }: P
                     <DialogTitle>{actionType === "add" ? "Add a new pet" : "Edit pet"}</DialogTitle>
                 </DialogHeader>
 
-                <PetForm actionType={actionType} onFormSubmit={() => setIsOpen(false)} />
+                <PetForm actionType={actionType} onFormSubmit={() => {
+                    flushSync(() => {
+                        setIsOpen(false)
+                    })
+                }} />
             </DialogContent>
         </Dialog>
     )
