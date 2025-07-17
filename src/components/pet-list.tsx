@@ -30,7 +30,7 @@ export default function PetList() {
             )}
           >
             <Image
-              src={pet.imageURL}
+              src={pet.imageUrl}
               alt={pet.name}
               width={45}
               height={45}

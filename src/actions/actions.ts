@@ -4,11 +4,19 @@ import { PetEssentials } from "@/lib/types";
 import prisma from "../lib/db";
 import { revalidatePath } from "next/cache";
 import { Pet } from "@prisma/client";
+import { petFormSchema } from "@/lib/zod-schemas";
 
 export async function addPet(petData: PetEssentials) {
+  const validatedPet = petFormSchema.safeParse(petData);
+  if (!validatedPet.success) {
+    return {
+      message: "Invalid pet data",
+    };
+  }
+
   try {
     await prisma.pet.create({
-      data: petData,
+      data: validatedPet.data,
     });
   } catch (error) {
     return {
@@ -20,10 +28,17 @@ export async function addPet(petData: PetEssentials) {
 }
 
 export async function editPet(petId: Pet["id"], petData: PetEssentials) {
+  const validatedPet = petFormSchema.safeParse(petData);
+  if (!validatedPet.success) {
+    return {
+      message: "Invalid pet data",
+    };
+  }
+  
   try {
     await prisma.pet.update({
       where: { id: petId },
-      data: petData,
+      data: validatedPet.data,
     });
   } catch {
     return {

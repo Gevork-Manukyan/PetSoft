@@ -24,7 +24,7 @@ function TopBar({ pet }: { pet: Pet }) {
   return (
     <div className="flex items-center bg-white px-8 py-5 border-b border-light">
       <Image
-        src={pet.imageURL}
+        src={pet.imageUrl}
         alt={pet.name}
         width={75}
         height={75}
