@@ -16,3 +16,5 @@ export const petFormSchema = z.object({
     }
 })
 export type PetFormSchema = z.infer<typeof petFormSchema>;
+
+export const petIdSchema = z.string().uuid({ message: "Invalid pet ID" });
