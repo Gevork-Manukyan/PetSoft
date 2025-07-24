@@ -4,37 +4,29 @@ import BackgroundPattern from "@/components/background-pattern";
 import { Toaster } from "@/components/ui/sonner";
 import PetContextProvider from "@/contexts/pet-context-provider";
 import SearchContextProvider from "@/contexts/search-context-provider";
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/db";
-import { redirect } from "next/navigation";
+import { getPetsByUserId, requireUserSession } from "@/lib/server-utils";
 
-export default async function Layout({ children }: { children: React.ReactNode }) {
-    const session = await auth();
-    if (!session?.user) {
-        redirect("/login");
-    }
-    
-    const pets = await prisma.pet.findMany({
-        where: {
-            userId: session?.user?.id,
-        },
-    });
-    
-    return (
-        <>
-            <BackgroundPattern />
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await requireUserSession();
+  const pets = await getPetsByUserId(session.user.id);
 
-            <div className="flex flex-col min-h-screen max-w-[1050px] mx-auto px-4">
-                <AppHeader />
-                <PetContextProvider pets={pets}>
-                    <SearchContextProvider>
-                        {children}
-                    </SearchContextProvider>
-                </PetContextProvider>
-                <AppFooter />
-            </div>
+  return (
+    <>
+      <BackgroundPattern />
 
-            <Toaster position="top-right" />
-        </>
-    )
+      <div className="flex flex-col min-h-screen max-w-[1050px] mx-auto px-4">
+        <AppHeader />
+        <PetContextProvider pets={pets}>
+          <SearchContextProvider>{children}</SearchContextProvider>
+        </PetContextProvider>
+        <AppFooter />
+      </div>
+
+      <Toaster position="top-right" />
+    </>
+  );
 }
