@@ -18,3 +18,9 @@ export const petFormSchema = z.object({
 export type PetFormSchema = z.infer<typeof petFormSchema>;
 
 export const petIdSchema = z.string().uuid({ message: "Invalid pet ID" });
+
+export const authSchema = z.object({
+    email: z.string().email().max(100, { message: "Email must be less than 100 characters" }),
+    password: z.string().max(100, { message: "Password must be less than 100 characters" })
+})
+export type AuthSchema = z.infer<typeof authSchema>;

@@ -2,31 +2,50 @@
 
 import prisma from "../lib/db";
 import { revalidatePath } from "next/cache";
-import { petFormSchema, petIdSchema } from "@/lib/zod-schemas";
+import { authSchema, petFormSchema, petIdSchema } from "@/lib/zod-schemas";
 import { signIn, signOut } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { getPetByPetId, requireUserSession } from "@/lib/server-utils";
 
-export async function LogIn(formData: FormData) {
+export async function LogIn(formData: unknown) {
+  if (!(formData instanceof FormData)) {
+    return {
+      message: "Invalid form data",
+    }
+  }
+
   await signIn("credentials", formData);
   redirect("/app/dashboard");
 }
 
-export async function SignUp(formData: FormData) {
-  const hashedPassword = await bcrypt.hash(
-    formData.get("password") as string,
-    10
-  );
+export async function SignUp(formData: unknown) {
+  if (!(formData instanceof FormData)) {
+    return {
+      message: "Invalid form data",
+    }
+  }
+  
+  const formDataObject = Object.fromEntries(formData.entries());
+  const validatedFormDataObj = authSchema.safeParse(formDataObject);
+  if (!validatedFormDataObj.success) {
+    return {
+      message: "Invalid form data",
+    }
+  }
+  
+  const { email, password } = validatedFormDataObj.data;
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   await prisma.user.create({
     data: {
-      email: formData.get("email") as string,
+      email,
       hashedPassword,
     },
   });
 
-  await LogIn(formData);
+  await signIn("credentials", formData);
+  redirect("/app/dashboard");
 }
 
 export async function SignOut() {
