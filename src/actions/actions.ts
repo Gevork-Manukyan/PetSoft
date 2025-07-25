@@ -7,44 +7,82 @@ import { signIn, signOut } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { getPetByPetId, requireUserSession } from "@/lib/server-utils";
+import { Prisma } from "@prisma/client";
+import { AuthError } from "next-auth";
 
-export async function LogIn(formData: unknown) {
+export async function LogIn(prevState: unknown, formData: unknown) {
   if (!(formData instanceof FormData)) {
     return {
       message: "Invalid form data",
-    }
+    };
   }
 
-  await signIn("credentials", formData);
-  redirect("/app/dashboard");
+  try {
+    await signIn("credentials", formData);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch(error.type) {
+        case "CredentialsSignin":
+          return {
+            message: "Invalid email or password",
+          };
+        default:
+          return {
+            message: "Something went wrong",
+          };
+      }
+    }
+
+    throw error; // nextjs redirects throws (redirect is called by signIn) error so we need to rethrow it
+  }
 }
 
-export async function SignUp(formData: unknown) {
+export async function SignUp(prevState: unknown, formData: unknown) {
   if (!(formData instanceof FormData)) {
     return {
       message: "Invalid form data",
-    }
+    };
   }
-  
-  const formDataObject = Object.fromEntries(formData.entries());
-  const validatedFormDataObj = authSchema.safeParse(formDataObject);
+
+  const validatedFormDataObj = authSchema.safeParse(formData);
   if (!validatedFormDataObj.success) {
     return {
       message: "Invalid form data",
-    }
+    };
   }
-  
+
   const { email, password } = validatedFormDataObj.data;
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  await prisma.user.create({
-    data: {
-      email,
-      hashedPassword,
-    },
-  });
+  try {
+    await prisma.user.create({
+      data: {
+        email,
+        hashedPassword,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return {
+          message: "User already exists",
+        };
+      }
+    }
 
-  await signIn("credentials", formData);
+    return {
+      message: "Could not create user",
+    };
+  }
+
+  try {
+    await signIn("credentials", formData);
+  } catch (error) {
+    return {
+      message: "Invalid email or password",
+    };
+  }
+
   redirect("/app/dashboard");
 }
 
