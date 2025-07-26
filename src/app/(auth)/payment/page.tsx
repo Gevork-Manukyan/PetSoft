@@ -3,12 +3,38 @@
 import { createCheckoutSession } from "@/actions/actions";
 import H1 from "@/components/h1";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 
-export default function PaymentPage() {
+export default function PaymentPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+    const [isPending, startTransition] = useTransition();
+    const { update } = useSession();
+    const router = useRouter();
+
     return (
         <main className="flex flex-col items-center justify-center space-y-10">
             <H1>PetSoft access requires payment</H1>
-            <Button onClick={async () => await createCheckoutSession()}>Buy lifetime access for $299</Button>
+
+            {searchParams.success && (
+                <Button onClick={async () => {
+                    await update(true);
+                    router.push("/app/dashboard");
+                }}>Continue to dashboard</Button>
+            )}
+
+            {!searchParams.success && !searchParams.cancelled && (
+                <Button onClick={() => startTransition(async () => await createCheckoutSession())} disabled={isPending}>Buy lifetime access for $299</Button>
+            )}
+
+            {searchParams.success && (
+                <p className="text-sm text-green-700">Payment successful! You now have lifetime access to PetSoft.</p>
+            )}
+
+            {searchParams.cancelled && (
+                <p className="text-sm text-red-700">Payment cancelled. Please try again.</p>
+            )}
+            
         </main>
     )
 }
