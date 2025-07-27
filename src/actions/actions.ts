@@ -40,13 +40,16 @@ export async function LogIn(prevState: unknown, formData: unknown) {
 }
 
 export async function SignUp(prevState: unknown, formData: unknown) {
+  
   if (!(formData instanceof FormData)) {
     return {
       message: "Invalid form data",
     };
   }
 
-  const validatedFormDataObj = authSchema.safeParse(formData);
+  const formDataEntries = Object.fromEntries(formData.entries());
+  
+  const validatedFormDataObj = authSchema.safeParse(formDataEntries);
   if (!validatedFormDataObj.success) {
     return {
       message: "Invalid form data",
@@ -72,20 +75,13 @@ export async function SignUp(prevState: unknown, formData: unknown) {
       }
     }
 
+    console.log("SignUp", error);
     return {
       message: "Could not create user",
     };
   }
-
-  try {
-    await signIn("credentials", formData);
-  } catch (error) {
-    return {
-      message: "Invalid email or password",
-    };
-  }
-
-  redirect("/app/dashboard");
+  
+  await signIn("credentials", formData);
 }
 
 export async function SignOut() {

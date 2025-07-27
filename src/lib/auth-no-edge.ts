@@ -6,28 +6,45 @@ import { authSchema } from "./zod-schemas";
 import { nextAuthEdgeConfig } from "./auth-edge";
 
 const config = {
-    ...nextAuthEdgeConfig,
-    providers: [
-        Credentials({
-            async authorize(credentials) {
-                // runs on login
+  ...nextAuthEdgeConfig,
+  providers: [
+    Credentials({
+      async authorize(credentials) {
+        // runs on login
 
-                const validatedFormData = authSchema.safeParse(credentials);
-                if (!validatedFormData.success) return null;
+        // validation
+        const validatedFormData = authSchema.safeParse(credentials);
+        if (!validatedFormData.success) {
+          return null;
+        }
 
-                const { email, password } = validatedFormData.data;
-                const user = await getUserByEmail(email);
+        // extract values
+        const { email, password } = validatedFormData.data;
 
-                if (!user) return null;
+        const user = await getUserByEmail(email);
+        if (!user) {
+          console.log("No user found");
+          return null;
+        }
 
-                const passwordsMatch = await bcrypt.compare(password, user.hashedPassword);
+        const passwordsMatch = await bcrypt.compare(
+          password,
+          user.hashedPassword
+        );
+        if (!passwordsMatch) {
+          console.log("Invalid credentials");
+          return null;
+        }
 
-                if (!passwordsMatch) return null;
-
-                return user;
-            }
-        })
-    ]
+        return user;
+      },
+    }),
+  ],
 } satisfies NextAuthConfig;
 
-export const { auth, signIn, signOut, handlers: { GET, POST } } = NextAuth(config);
+export const {
+  auth,
+  signIn,
+  signOut,
+  handlers: { GET, POST },
+} = NextAuth(config);

@@ -5,6 +5,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY!);
 export async function POST(request: Request) {
     const body = await request.json();
     const signature = request.headers.get("stripe-signature");
+    console.log("Stripe webhook received", body);
 
     let event;
     try {   
