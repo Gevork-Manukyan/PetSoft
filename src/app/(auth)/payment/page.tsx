@@ -9,7 +9,7 @@ import { useTransition } from "react";
 
 export default function PaymentPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
     const [isPending, startTransition] = useTransition();
-    const { update } = useSession();
+    const { data: session, update, status } = useSession();
     const router = useRouter();
 
     return (
@@ -20,7 +20,9 @@ export default function PaymentPage({ searchParams }: { searchParams: { [key: st
                 <Button onClick={async () => {
                     await update(true);
                     router.push("/app/dashboard");
-                }}>Continue to dashboard</Button>
+                }} disabled={status === "loading" || session?.user.hasAccess}>
+                    Continue to dashboard
+                </Button>
             )}
 
             {!searchParams.success && !searchParams.cancelled && (
