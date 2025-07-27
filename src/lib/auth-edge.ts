@@ -1,10 +1,7 @@
-import NextAuth, { NextAuthConfig } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
+import { NextAuthConfig } from "next-auth";
 import { getUserByEmail } from "./server-utils";
-import { authSchema } from "./zod-schemas";
 
-const config = {
+export const nextAuthEdgeConfig = {
     pages: {
         signIn: "/login"
     },
@@ -12,27 +9,6 @@ const config = {
         maxAge: 24 * 60 * 60,
         strategy: "jwt"
     },
-    providers: [
-        Credentials({
-            async authorize(credentials) {
-                // runs on login
-
-                const validatedFormData = authSchema.safeParse(credentials);
-                if (!validatedFormData.success) return null;
-
-                const { email, password } = validatedFormData.data;
-                const user = await getUserByEmail(email);
-
-                if (!user) return null;
-
-                const passwordsMatch = await bcrypt.compare(password, user.hashedPassword);
-
-                if (!passwordsMatch) return null;
-
-                return user;
-            }
-        })
-    ],
     callbacks: {
         // Runs on every request with middleware
         authorized: ({ auth, request }) => {
@@ -92,7 +68,6 @@ const config = {
 
             return session;
         }
-    }
+    },
+    providers: [],
 } satisfies NextAuthConfig;
-
-export const { auth, signIn, signOut, handlers: { GET, POST } } = NextAuth(config);
